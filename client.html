@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>WebSocket Test</title>
+  </head>
+  <body>
+    <div id="content"></div>
+    <input type="text" id="input" />
+    <br />
+    <button id="btn">Send message</button>
+
+    <script>
+      const messages = [];
+      var ws;
+      var btn = document.getElementById("btn");
+      var input = document.getElementById("input");
+      var content = document.getElementById("content");
+      btn.addEventListener("click", function () {
+        console.log("click");
+        ws.send(input.value);
+      });
+      window.onload = function () {
+        ws = new WebSocket("ws://localhost:5555");
+        ws.addEventListener("open", (event) => {
+          console.log("Handshake successfull");
+        });
+        ws.onerror = function (e) {
+          console.log("e", e);
+        };
+        ws.addEventListener("message", (event) => {
+          console.log("Message from server : ", event.data);
+          messages.push(event.data);
+          content.textContent = JSON.stringify(messages);
+        });
+      };
+      window.onclose = function () {
+        ws.close();
+      };
+    </script>
+  </body>
+</html>
