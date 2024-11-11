@@ -1,4 +1,4 @@
-## C / C++ WEBSOCKET SERVER FROM SCRATCH
+## C WEBSOCKET SERVER FROM SCRATCH
 
 This is my own implementation of websocket server for learning purpose.
 
