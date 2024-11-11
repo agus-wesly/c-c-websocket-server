@@ -1,11 +1,10 @@
 #include "ws.h"
 #include <asm-generic/socket.h>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <netinet/in.h>
 #include <openssl/sha.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -16,16 +15,16 @@ char *get_websocket_key(char *buffer, char *copy)
 {
     strcpy(copy, buffer);
     char *token = strtok(copy, "\r\n");
-    char *websocket_key = nullptr;
-    while (token != nullptr)
+    char *websocket_key = NULL;
+    while (token != NULL)
     {
 
-        if (strstr(token, "Sec-WebSocket-Key:") != nullptr)
+        if (strstr(token, "Sec-WebSocket-Key:") != NULL)
         {
             websocket_key = strtok(token, ": ");
-            websocket_key = strtok(nullptr, ": ");
+            websocket_key = strtok(NULL, ": ");
         }
-        token = strtok(nullptr, "\r\n");
+        token = strtok(NULL, "\r\n");
     }
     return websocket_key;
 }

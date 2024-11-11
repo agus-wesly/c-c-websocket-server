@@ -117,113 +117,113 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named WEB_SOCKET_SERVER_CPP
+# Target rules for targets named WEB_SOCKET_SERVER_C
 
 # Build rule for target.
-WEB_SOCKET_SERVER_CPP: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WEB_SOCKET_SERVER_CPP
-.PHONY : WEB_SOCKET_SERVER_CPP
+WEB_SOCKET_SERVER_C: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 WEB_SOCKET_SERVER_C
+.PHONY : WEB_SOCKET_SERVER_C
 
 # fast build rule for target.
-WEB_SOCKET_SERVER_CPP/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build
-.PHONY : WEB_SOCKET_SERVER_CPP/fast
+WEB_SOCKET_SERVER_C/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/build
+.PHONY : WEB_SOCKET_SERVER_C/fast
 
-Base64.o: Base64.cpp.o
+Base64.o: Base64.c.o
 .PHONY : Base64.o
 
 # target to build an object file
-Base64.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/Base64.cpp.o
-.PHONY : Base64.cpp.o
+Base64.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/Base64.c.o
+.PHONY : Base64.c.o
 
-Base64.i: Base64.cpp.i
+Base64.i: Base64.c.i
 .PHONY : Base64.i
 
 # target to preprocess a source file
-Base64.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/Base64.cpp.i
-.PHONY : Base64.cpp.i
+Base64.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/Base64.c.i
+.PHONY : Base64.c.i
 
-Base64.s: Base64.cpp.s
+Base64.s: Base64.c.s
 .PHONY : Base64.s
 
 # target to generate assembly for a file
-Base64.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/Base64.cpp.s
-.PHONY : Base64.cpp.s
+Base64.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/Base64.c.s
+.PHONY : Base64.c.s
 
-main.o: main.cpp.o
+main.o: main.c.o
 .PHONY : main.o
 
 # target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/main.cpp.o
-.PHONY : main.cpp.o
+main.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/main.c.o
+.PHONY : main.c.o
 
-main.i: main.cpp.i
+main.i: main.c.i
 .PHONY : main.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/main.cpp.i
-.PHONY : main.cpp.i
+main.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/main.c.i
+.PHONY : main.c.i
 
-main.s: main.cpp.s
+main.s: main.c.s
 .PHONY : main.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/main.cpp.s
-.PHONY : main.cpp.s
+main.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/main.c.s
+.PHONY : main.c.s
 
-mem.o: mem.cpp.o
+mem.o: mem.c.o
 .PHONY : mem.o
 
 # target to build an object file
-mem.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/mem.cpp.o
-.PHONY : mem.cpp.o
+mem.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/mem.c.o
+.PHONY : mem.c.o
 
-mem.i: mem.cpp.i
+mem.i: mem.c.i
 .PHONY : mem.i
 
 # target to preprocess a source file
-mem.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/mem.cpp.i
-.PHONY : mem.cpp.i
+mem.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/mem.c.i
+.PHONY : mem.c.i
 
-mem.s: mem.cpp.s
+mem.s: mem.c.s
 .PHONY : mem.s
 
 # target to generate assembly for a file
-mem.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/mem.cpp.s
-.PHONY : mem.cpp.s
+mem.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/mem.c.s
+.PHONY : mem.c.s
 
-ws.o: ws.cpp.o
+ws.o: ws.c.o
 .PHONY : ws.o
 
 # target to build an object file
-ws.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/ws.cpp.o
-.PHONY : ws.cpp.o
+ws.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/ws.c.o
+.PHONY : ws.c.o
 
-ws.i: ws.cpp.i
+ws.i: ws.c.i
 .PHONY : ws.i
 
 # target to preprocess a source file
-ws.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/ws.cpp.i
-.PHONY : ws.cpp.i
+ws.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/ws.c.i
+.PHONY : ws.c.i
 
-ws.s: ws.cpp.s
+ws.s: ws.c.s
 .PHONY : ws.s
 
 # target to generate assembly for a file
-ws.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_CPP.dir/ws.cpp.s
-.PHONY : ws.cpp.s
+ws.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/WEB_SOCKET_SERVER_C.dir/build.make CMakeFiles/WEB_SOCKET_SERVER_C.dir/ws.c.s
+.PHONY : ws.c.s
 
 # Help Target
 help:
@@ -233,7 +233,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... WEB_SOCKET_SERVER_CPP"
+	@echo "... WEB_SOCKET_SERVER_C"
 	@echo "... Base64.o"
 	@echo "... Base64.i"
 	@echo "... Base64.s"

@@ -1,14 +1,13 @@
 #include "mem.h"
 #include "ws.h"
 #include <asm-generic/socket.h>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <openssl/sha.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -18,16 +17,16 @@ const int MAX_PAYLOAD_SIZE = 1024;
 const int MAX_CLIENT = 100;
 const char *HEADER = "HTTP/1.1 101 Switching Protocols\r\n";
 
-struct thread_info
+typedef struct
 {
     int new_socket;
-};
+} thread_info;
 
-struct thread_args
+typedef struct
 {
     size_t curr;
     thread_info *threads;
-};
+} thread_args;
 
 int do_handshake(char *buffer, thread_info *curr_thread)
 {
@@ -114,13 +113,13 @@ int main()
 
     memset(threads, -1, sizeof(threads));
 
-    if (getaddrinfo(nullptr, "5555", &address, &res) != 0)
+    if (getaddrinfo(NULL, "5555", &address, &res) != 0)
     {
         perror("ERROR ON FILLING ADDR INFO");
         return 1;
     };
 
-    for (p = res; p != nullptr; p = p->ai_next)
+    for (p = res; p != NULL; p = p->ai_next)
     {
         if ((socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
         {
@@ -168,7 +167,7 @@ int main()
         }
         pthread_t new_thread;
         thread_args arg = {i, threads};
-        pthread_create(&new_thread, nullptr, &establish_connection, &arg);
+        pthread_create(&new_thread, NULL, &establish_connection, &arg);
         pthread_detach(new_thread);
     }
     close(socket_fd);

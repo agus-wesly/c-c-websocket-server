@@ -1,12 +1,11 @@
-#include <cstddef>
-#include <cstring>
+#include <string.h>
 #include <sys/mman.h>
 
 void *create_shared_memory(size_t size)
 {
     int protection = PROT_READ | PROT_WRITE;
     int visibility = MAP_SHARED | MAP_ANONYMOUS;
-    return mmap(nullptr, size, protection, visibility, -1, 0);
+    return mmap(NULL, size, protection, visibility, -1, 0);
 }
 
 void add_new_client(char *clients, int new_socket)
