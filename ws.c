@@ -2,6 +2,7 @@
 #include <asm-generic/socket.h>
 #include <netinet/in.h>
 #include <openssl/sha.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,7 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// const int MAX_PAYLOAD_SIZE = 1024;
+// 9
+// 0b00001001
+// 0b00000001
+void print_bits(unsigned char byte)
+{
+    for (int i = 7; i >= 0; i--)
+    {
+        printf("%d", (byte >> i) & 1);
+    }
+    printf("\n");
+}
 
 char *get_websocket_key(char *buffer, char *copy)
 {
@@ -36,7 +47,6 @@ char *extract_key(char *websocket_key)
     const char *MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     websocket_key = strcat(websocket_key, MAGIC_STRING);
     SHA1((unsigned char *)websocket_key, strlen(websocket_key), (unsigned char *)hexresult);
-    printf("Result sha1 : %s\n", hexresult);
     // Encode to base64
     char *base64EncodeOutput;
     Base64Encode(hexresult, &base64EncodeOutput);
@@ -61,20 +71,20 @@ int write_header(int new_socket, char *extracted_key, const char *HEADER)
     return 0;
 }
 
-int decode_websocket_message(char *message, char *out)
+int decode_websocket_message(unsigned char *message, char *out)
 {
     // Decode payload length
-    memset(out, 0, strlen(out));
+    memset(out, '\0', strlen(out));
     const unsigned int bit_size = (unsigned int)message[1] & 0b01111111;
+    printf("Bit size %i\n", bit_size);
     const int opcode_size = 1;
-    ssize_t payload_length = (ssize_t)bit_size;
+    size_t payload_length = (size_t)bit_size;
 
     int payload_size = 1;
     if (bit_size == 126)
     {
         payload_size = 3;
-        // Read the next 16 bits
-        payload_length = (u_int16_t)message[2];
+        payload_length = (uint16_t)(message[2] << 8) | message[3];
     }
     else if (bit_size == 127)
     {
@@ -82,10 +92,11 @@ int decode_websocket_message(char *message, char *out)
         // Read the next 64 bits
         payload_length = (u_int64_t)message[2];
     }
+
     int mask_idx = payload_size + opcode_size;
-    char *mask = &message[mask_idx];
+    unsigned char *mask = &message[mask_idx];
     int payload_idx = payload_size + opcode_size + 4;
-    char *payload = &message[payload_idx];
+    unsigned char *payload = &message[payload_idx];
     for (int i = 0; i < payload_length; ++i)
     {
         out[i] = mask[i % 4] ^ payload[i];
@@ -95,19 +106,44 @@ int decode_websocket_message(char *message, char *out)
 
 int send_reply_message(int fd, char *msg)
 {
-    char buffer[100] = {0};
+    unsigned char buffer[MAX_PAYLOAD_SIZE] = {0};
     buffer[0] = 0x81;
-    buffer[1] = (unsigned char)strlen(msg);
-    memcpy(&buffer[2], msg, strlen(msg));
-    if (send(fd, buffer, strlen(msg) + 2, 0) < 0)
+    // TODO: set appropriate length
+    long msg_len = strlen(msg);
+    int idx;
+    unsigned int code;
+    if (msg_len <= 127)
     {
-        printf("Error in writing");
+        idx = 2;
+        buffer[1] = ((unsigned int)msg_len) & 0b01111111;
+    }
+    else if (msg_len <= 65535)
+    {
+        idx = 4;
+        buffer[1] = (unsigned int)(126 & 0b01111111);
+        buffer[2] = (unsigned char)((msg_len >> 8) & 0xFF);
+        buffer[3] = (unsigned char)((msg_len) & 0xFF);
+    }
+    else
+    {
+        idx = 10;
+        buffer[1] = (unsigned int)(127 & 0b01111111);
+        int j = 2;
+        for (int i = (64 - 8); i >= 0; i -= 8)
+        {
+            buffer[j++] = (unsigned char)(msg_len >> i) & 0xFF;
+        }
+    }
+    memcpy(&buffer[idx], msg, strlen(msg));
+    if (send(fd, buffer, strlen(msg) + idx, 0) < 0)
+    {
+        perror("Error in writing");
         return -1;
     };
     return 0;
 }
 
-int handle_received_message(int new_socket, char *buffer_ws)
+int handle_received_message(int new_socket, unsigned char *buffer_ws)
 {
     long resp_ws = recv(new_socket, buffer_ws, 16000, 0);
     if (resp_ws < 0)

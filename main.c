@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 int PORT = 5555;
-const int MAX_PAYLOAD_SIZE = 1024;
 const int MAX_CLIENT = 100;
 const char *HEADER = "HTTP/1.1 101 Switching Protocols\r\n";
 
@@ -57,7 +56,7 @@ void *establish_connection(void *args)
         exit(EXIT_FAILURE);
     };
 
-    char buffer_ws[16000] = {0};
+    unsigned char buffer_ws[16000] = {0};
     while (1)
     {
         if ((handle_received_message(curr_thread->new_socket, buffer_ws) < 0))
@@ -65,7 +64,7 @@ void *establish_connection(void *args)
             perror("On receiving message");
             exit(EXIT_FAILURE);
         };
-        char *ws_message = (char *)malloc(MAX_PAYLOAD_SIZE * sizeof(char));
+        char *ws_message = (char *)calloc(MAX_PAYLOAD_SIZE, sizeof(char));
         if ((decode_websocket_message(buffer_ws, ws_message)) < 0)
         {
             perror("On receiving message");
