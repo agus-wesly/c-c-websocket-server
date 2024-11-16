@@ -1,4 +1,3 @@
-#include "mem.h"
 #include "ws.h"
 #include <asm-generic/socket.h>
 #include <netdb.h>
@@ -8,12 +7,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-int PORT = 5555;
-const int MAX_CLIENT = 100;
+#define MAX_CLIENT 100
+#define PORT "5555"
+#define MAX_EVENTS 16
+
 const char *HEADER = "HTTP/1.1 101 Switching Protocols\r\n";
 
 typedef struct
@@ -30,89 +32,44 @@ typedef struct
 int do_handshake(char *buffer, thread_info *curr_thread)
 {
     // Process the key from client
-    char *copy = (char *)malloc(strlen(buffer) + 1);
-    char *websocket_key = get_websocket_key(buffer, copy);
+    char *websocket_key = get_websocket_key(buffer);
     char *extracted_key = extract_key(websocket_key);
     if ((write_header(curr_thread->new_socket, extracted_key, HEADER)) == -1)
     {
         return -1;
     }
     printf("New Client : %i\n", curr_thread->new_socket);
-    free(copy);
     return 0;
 }
 
-void *establish_connection(void *args)
+int socket_clients[MAX_CLIENT];
+
+int is_socket_client(int fd)
 {
-    thread_args *th_args = (thread_args *)args;
-    thread_info *curr_thread = &(th_args->threads[th_args->curr]);
-    thread_info *threads = th_args->threads;
-    char buffer[16000] = {0};
-    long resp = recv(curr_thread->new_socket, &buffer, 16000, 0);
-
-    if ((do_handshake(buffer, curr_thread) < 0))
+    for (int i = 0; i < 100; ++i)
     {
-        perror("On handshake");
-        exit(EXIT_FAILURE);
-    };
-
-    unsigned char buffer_ws[16000] = {0};
-    while (1)
-    {
-        if ((handle_received_message(curr_thread->new_socket, buffer_ws) < 0))
-        {
-            perror("On receiving message");
-            exit(EXIT_FAILURE);
-        };
-        char *ws_message = (char *)calloc(MAX_PAYLOAD_SIZE, sizeof(char));
-        if ((decode_websocket_message(buffer_ws, ws_message)) < 0)
-        {
-            perror("On receiving message");
-            exit(EXIT_FAILURE);
-        };
-        printf("msg : %s\n", ws_message);
-        // Broadcast it !
-        for (int i = 0; i < MAX_CLIENT; ++i)
-        {
-            if (threads[i].new_socket == -1 || threads[i].new_socket == curr_thread->new_socket)
-            {
-                continue;
-            }
-            printf("SENDING TO : %i FROM :  %i\n", threads[i].new_socket, curr_thread->new_socket);
-            if ((send_reply_message(threads[i].new_socket, ws_message)) < 0)
-            {
-                perror("On sending reply");
-                break;
-            };
-        }
-        // Send to ourself
-        if ((send_reply_message(curr_thread->new_socket, ws_message)) < 0)
-        {
-            perror("On sending reply");
-            break;
-        };
-        free(ws_message);
+        if (socket_clients[i] == fd)
+            return 1;
     }
-    return args;
+    return 0;
 }
 
 int main()
 {
-    thread_info threads[MAX_CLIENT];
-    char *clients = (char *)create_shared_memory(MAX_CLIENT);
     int socket_fd;
     int new_socket;
     int pid;
     struct addrinfo address, *res, *p;
     struct sockaddr new_addr;
+    struct epoll_event evt;
+    struct epoll_event polled_events[MAX_EVENTS];
+
     memset(&address, 0, sizeof(address));
     address.ai_family = AF_UNSPEC;
     address.ai_socktype = SOCK_STREAM;
     address.ai_flags = AI_PASSIVE;
 
-    memset(threads, -1, sizeof(threads));
-
-    if (getaddrinfo(NULL, "5555", &address, &res) != 0)
+    if (getaddrinfo(NULL, PORT, &address, &res) != 0)
     {
         perror("ERROR ON FILLING ADDR INFO");
         return 1;
@@ -139,35 +96,77 @@ int main()
         break;
     }
     freeaddrinfo(res);
-    // listen
     if (listen(socket_fd, 10) < 0)
     {
         perror("On listen");
         exit(EXIT_FAILURE);
     };
-    printf("+++++++++++++++++++++++++++++Waiting for a new connection+++++++++++++++++++++++++++++\n");
-    size_t i;
-    while (1)
-    {
-        int size_new_addr = sizeof(new_addr);
-        if ((new_socket = accept(socket_fd, (struct sockaddr *)&new_addr, (socklen_t *)&size_new_addr)) < 0)
-        {
-            perror("On accept");
-            exit(EXIT_FAILURE);
-        };
 
-        for (i = 0; i < MAX_CLIENT; ++i)
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    evt.events = EPOLLIN;
+    evt.data.fd = socket_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &evt) == -1)
+    {
+        perror("ERROR IN EPOLL CONTROL");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("+++++++++++++++++++++++++++++Waiting for a new connection+++++++++++++++++++++++++++++\n");
+    for (;;)
+    {
+        int nfds = epoll_wait(epoll_fd, polled_events, MAX_EVENTS, -1);
+        for (int i = 0; i < nfds; ++i)
         {
-            if (threads[i].new_socket == -1)
+            if (polled_events[i].data.fd == socket_fd)
             {
-                threads[i].new_socket = new_socket;
-                break;
+                int size_new_addr = sizeof(new_addr);
+                if ((new_socket = accept(socket_fd, (struct sockaddr *)&new_addr, (socklen_t *)&size_new_addr)) < 0)
+                {
+                    perror("On accept");
+                    exit(EXIT_FAILURE);
+                };
+                evt.events = EPOLLIN;
+                evt.data.fd = new_socket;
+                if ((epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_socket, &evt)) == -1)
+                {
+                    perror("epoll_ctl");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else if (is_socket_client(polled_events[i].data.fd))
+            {
+                unsigned char buffer_ws[1024];
+                if (handle_received_message(polled_events[i].data.fd, buffer_ws) == -1)
+                    continue;
+
+                char ws_message[1024];
+                decode_websocket_message(buffer_ws, ws_message);
+                printf("MESSAGE : %s\n", ws_message);
+            }
+            else
+            {
+                printf("Receiving data from the client with socket fd: %d\n", polled_events[i].data.fd);
+                char buffer[1024];
+                read(polled_events[i].data.fd, buffer, sizeof(buffer));
+                // Process the key from client
+                char *websocket_key = get_websocket_key(buffer);
+                char *extracted_key = extract_key(websocket_key);
+                if ((write_header(polled_events[i].data.fd, extracted_key, HEADER)) == -1)
+                {
+                    perror("While send header");
+                    break;
+                }
+                for (int i = 0; i < MAX_CLIENT; ++i)
+                {
+                    if (socket_clients[i] == 0)
+                    {
+                        socket_clients[i] = polled_events[i].data.fd;
+                        break;
+                    }
+                }
+                printf("New Client : %i\n", polled_events[i].data.fd);
             }
         }
-        pthread_t new_thread;
-        thread_args arg = {i, threads};
-        pthread_create(&new_thread, NULL, &establish_connection, &arg);
-        pthread_detach(new_thread);
     }
     close(socket_fd);
     return 0;

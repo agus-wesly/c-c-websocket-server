@@ -2,7 +2,7 @@
 #define WS_H
 #define MAX_PAYLOAD_SIZE 1024
 
-char *get_websocket_key(char *buffer, char *copy);
+char *get_websocket_key(char *buffer);
 char *extract_key(char *websocket_key);
 int decode_websocket_message(unsigned char *message, char *out);
 int send_reply_message(int fd, char *msg);

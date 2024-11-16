@@ -22,10 +22,9 @@ void print_bits(unsigned char byte)
     printf("\n");
 }
 
-char *get_websocket_key(char *buffer, char *copy)
+char *get_websocket_key(char *buffer)
 {
-    strcpy(copy, buffer);
-    char *token = strtok(copy, "\r\n");
+    char *token = strtok(buffer, "\r\n");
     char *websocket_key = NULL;
     while (token != NULL)
     {
