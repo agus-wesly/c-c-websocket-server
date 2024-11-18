@@ -9,13 +9,15 @@
     <input type="text" id="input" />
     <br />
     <button id="btn">Send message</button>
+    <h3>Message List :</h3>
+    <ul id="container"></ul>
 
     <script>
-      const messages = [];
       var ws;
       var btn = document.getElementById("btn");
       var input = document.getElementById("input");
       var content = document.getElementById("content");
+      var ul = document.getElementById("container");
       btn.addEventListener("click", function () {
         console.log("click");
         ws.send(input.value);
@@ -30,8 +32,9 @@
         };
         ws.addEventListener("message", (event) => {
           console.log("Message from server : ", event.data);
-          messages.push(event.data);
-          content.textContent = JSON.stringify(messages);
+          const li = document.createElement("li");
+          li.textContent = event.data;
+          ul.appendChild(li);
         });
       };
       window.onclose = function () {
