@@ -117,7 +117,8 @@ int main()
         int nfds = epoll_wait(epoll_fd, polled_events, MAX_EVENTS, -1);
         for (int i = 0; i < nfds; ++i)
         {
-            if (polled_events[i].data.fd == socket_fd)
+            int current_fd = polled_events[i].data.fd;
+            if (current_fd == socket_fd)
             {
                 int size_new_addr = sizeof(new_addr);
                 if ((new_socket = accept(socket_fd, (struct sockaddr *)&new_addr, (socklen_t *)&size_new_addr)) < 0)
@@ -133,38 +134,43 @@ int main()
                     exit(EXIT_FAILURE);
                 }
             }
-            else if (is_socket_client(polled_events[i].data.fd))
+            else if (is_socket_client(current_fd))
             {
-                unsigned char buffer_ws[1024];
-                if (handle_received_message(polled_events[i].data.fd, buffer_ws) == -1)
+                unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
+                if (handle_received_message(current_fd, buffer_ws) == -1)
+                {
+                    free(buffer_ws);
                     continue;
-
-                char ws_message[1024];
+                }
+                char *ws_message = calloc(1024, sizeof(char));
                 decode_websocket_message(buffer_ws, ws_message);
                 printf("MESSAGE : %s\n", ws_message);
+                free(ws_message);
             }
             else
             {
-                printf("Receiving data from the client with socket fd: %d\n", polled_events[i].data.fd);
-                char buffer[1024];
-                read(polled_events[i].data.fd, buffer, sizeof(buffer));
+                printf("Receiving data from the client with socket fd: %d\n", current_fd);
+                char *buffer = (char *)calloc(1024, sizeof(char));
+                read(current_fd, buffer, 1024);
                 // Process the key from client
                 char *websocket_key = get_websocket_key(buffer);
                 char *extracted_key = extract_key(websocket_key);
-                if ((write_header(polled_events[i].data.fd, extracted_key, HEADER)) == -1)
+                if ((write_header(current_fd, extracted_key, HEADER)) == -1)
                 {
                     perror("While send header");
+                    free(buffer);
                     break;
                 }
                 for (int i = 0; i < MAX_CLIENT; ++i)
                 {
                     if (socket_clients[i] == 0)
                     {
-                        socket_clients[i] = polled_events[i].data.fd;
+                        socket_clients[i] = current_fd;
                         break;
                     }
                 }
-                printf("New Client : %i\n", polled_events[i].data.fd);
+                printf("New Client : %i\n", current_fd);
+                free(buffer);
             }
         }
     }

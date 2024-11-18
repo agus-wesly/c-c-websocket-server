@@ -144,7 +144,7 @@ int send_reply_message(int fd, char *msg)
 
 int handle_received_message(int new_socket, unsigned char *buffer_ws)
 {
-    long resp_ws = recv(new_socket, buffer_ws, 16000, 0);
+    long resp_ws = recv(new_socket, buffer_ws, 1024, 0);
     if (resp_ws < 0)
     {
         perror("Error in reading");
