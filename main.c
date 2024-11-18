@@ -29,16 +29,16 @@ typedef struct
     thread_info *threads;
 } thread_args;
 
-int do_handshake(char *buffer, thread_info *curr_thread)
+int do_handshake(int current_fd, char *buffer)
 {
-    // Process the key from client
+    read(current_fd, buffer, 1024);
     char *websocket_key = get_websocket_key(buffer);
     char *extracted_key = extract_key(websocket_key);
-    if ((write_header(curr_thread->new_socket, extracted_key, HEADER)) == -1)
+    if ((write_header(current_fd, extracted_key, HEADER)) == -1)
     {
+        perror("While send header");
         return -1;
     }
-    printf("New Client : %i\n", curr_thread->new_socket);
     return 0;
 }
 
@@ -51,6 +51,27 @@ int is_socket_client(int fd)
         if (socket_clients[i] == fd)
             return 1;
     }
+    return 0;
+}
+
+int broadcast_message(int current_fd, int socket_fd, char *ws_message)
+{
+    for (int i = 0; i < MAX_CLIENT; ++i)
+    {
+        if (socket_clients[i] == 0 || socket_clients[i] == current_fd || socket_clients[i] == socket_fd)
+        {
+            continue;
+        }
+        if (send_reply_message(socket_clients[i], ws_message) == -1)
+        {
+            return -1;
+        }
+        if (send_reply_message(current_fd, ws_message) == -1)
+        {
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -145,22 +166,20 @@ int main()
                 char *ws_message = calloc(1024, sizeof(char));
                 decode_websocket_message(buffer_ws, ws_message);
                 printf("MESSAGE : %s\n", ws_message);
+                // Broadcast
+                broadcast_message(current_fd, socket_fd, ws_message);
                 free(ws_message);
             }
             else
             {
                 printf("Receiving data from the client with socket fd: %d\n", current_fd);
                 char *buffer = (char *)calloc(1024, sizeof(char));
-                read(current_fd, buffer, 1024);
                 // Process the key from client
-                char *websocket_key = get_websocket_key(buffer);
-                char *extracted_key = extract_key(websocket_key);
-                if ((write_header(current_fd, extracted_key, HEADER)) == -1)
+                if (do_handshake(current_fd, buffer) == -1)
                 {
-                    perror("While send header");
                     free(buffer);
-                    break;
-                }
+                    continue;
+                };
                 for (int i = 0; i < MAX_CLIENT; ++i)
                 {
                     if (socket_clients[i] == 0)
@@ -168,6 +187,7 @@ int main()
                         socket_clients[i] = current_fd;
                         break;
                     }
+                    // TODO: handle max connection
                 }
                 printf("New Client : %i\n", current_fd);
                 free(buffer);
