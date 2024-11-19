@@ -9,12 +9,14 @@
     <input type="text" id="input" />
     <br />
     <button id="btn">Send message</button>
+    <button id="btn-close">Close connection</button>
     <h3>Message List :</h3>
     <ul id="container"></ul>
 
     <script>
       var ws;
       var btn = document.getElementById("btn");
+      var btnClose = document.getElementById("btn-close");
       var input = document.getElementById("input");
       var content = document.getElementById("content");
       var ul = document.getElementById("container");
@@ -37,9 +39,10 @@
           ul.appendChild(li);
         });
       };
-      window.onclose = function () {
+      btnClose.addEventListener("click", (event) => {
+        console.log("close");
         ws.close();
-      };
+      });
     </script>
   </body>
 </html>

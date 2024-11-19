@@ -70,10 +70,10 @@ int write_header(int new_socket, char *extracted_key, const char *HEADER)
     return 0;
 }
 
-int decode_websocket_message(unsigned char *message, char *out)
+int decode_websocket_message(unsigned char *message, char **ws_message)
 {
     // Decode payload length
-    memset(out, '\0', strlen(out));
+    // memset(out, '\0', strlen(out));
     const unsigned int bit_size = (unsigned int)message[1] & 0b01111111;
     printf("Bit size %i\n", bit_size);
     const int opcode_size = 1;
@@ -84,6 +84,7 @@ int decode_websocket_message(unsigned char *message, char *out)
     {
         payload_size = 3;
         payload_length = (uint16_t)(message[2] << 8) | message[3];
+        // char *ws_message = calloc(1024, sizeof(char));
     }
     else if (bit_size == 127)
     {
@@ -92,13 +93,15 @@ int decode_websocket_message(unsigned char *message, char *out)
         payload_length = (u_int64_t)message[2];
     }
 
+    *ws_message = (char *)calloc(payload_length + 2, sizeof(char));
+
     int mask_idx = payload_size + opcode_size;
     unsigned char *mask = &message[mask_idx];
     int payload_idx = payload_size + opcode_size + 4;
     unsigned char *payload = &message[payload_idx];
     for (int i = 0; i < payload_length; ++i)
     {
-        out[i] = mask[i % 4] ^ payload[i];
+        (*ws_message)[i] = mask[i % 4] ^ payload[i];
     }
     return 0;
 }
@@ -142,13 +145,84 @@ int send_reply_message(int fd, char *msg)
     return 0;
 }
 
-int handle_received_message(int new_socket, unsigned char *buffer_ws)
+int broadcast_message(int current_fd, int socket_fd, char *ws_message)
 {
-    long resp_ws = recv(new_socket, buffer_ws, 1024, 0);
+    for (int i = 0; i < MAX_CLIENT; ++i)
+    {
+        if (socket_clients[i] == 0 || socket_clients[i] == current_fd || socket_clients[i] == socket_fd)
+        {
+            continue;
+        }
+        if (send_reply_message(socket_clients[i], ws_message) == -1)
+        {
+            perror("Error when sending to another\n");
+            return -1;
+        }
+    }
+    if (send_reply_message(current_fd, ws_message) == -1)
+    {
+        perror("Error when sending to current\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+enum Opcode
+{
+    Continuation_Frame = 0x0,
+    Text_Frame = 0x1,
+    Binary_Frame = 0x2,
+    Close_Frame = 0x8,
+    Ping_Frame = 0x9,
+    Pong_Frame = 0xA,
+};
+
+int handle_received_message(int current_fd, unsigned char *buffer_ws)
+{
+    long resp_ws = recv(current_fd, buffer_ws, 1024, 0);
     if (resp_ws < 0)
     {
         perror("Error in reading");
+        free(buffer_ws);
         return -1;
+    }
+    return 0;
+}
+
+int handle_text_frame(int current_fd, unsigned char *buffer_ws)
+{
+    char *ws_message = NULL;
+    decode_websocket_message(buffer_ws, &ws_message);
+    printf("MESSAGE : %s\n", ws_message);
+    // Broadcast
+    broadcast_message(current_fd, socket_fd, ws_message);
+    free(ws_message);
+    return 0;
+}
+
+int process_message(int current_fd, unsigned char *buffer_ws)
+{
+    // TODO: Check opcode to see the status.
+    // I think we can start using enum here :r
+    int opcode = (buffer_ws[0] & 0xf);
+    printf("opcode is %i\n", opcode);
+    switch (opcode)
+    {
+    case Continuation_Frame: {
+        break;
+    }
+    case Text_Frame: {
+        handle_text_frame(current_fd, buffer_ws);
+        break;
+    }
+    case Close_Frame: {
+        printf("Close frame\n");
+        break;
+    }
+    default: {
+        return -1;
+    }
     }
     return 0;
 }

@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_CLIENT 100
 #define PORT "5555"
 #define MAX_EVENTS 16
 
@@ -53,31 +52,9 @@ int is_socket_client(int fd)
     }
     return 0;
 }
-
-int broadcast_message(int current_fd, int socket_fd, char *ws_message)
-{
-    for (int i = 0; i < MAX_CLIENT; ++i)
-    {
-        if (socket_clients[i] == 0 || socket_clients[i] == current_fd || socket_clients[i] == socket_fd)
-        {
-            continue;
-        }
-        if (send_reply_message(socket_clients[i], ws_message) == -1)
-        {
-            return -1;
-        }
-        if (send_reply_message(current_fd, ws_message) == -1)
-        {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
+int socket_fd;
 int main()
 {
-    int socket_fd;
     int new_socket;
     int pid;
     struct addrinfo address, *res, *p;
@@ -160,15 +137,14 @@ int main()
                 unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
                 if (handle_received_message(current_fd, buffer_ws) == -1)
                 {
-                    free(buffer_ws);
                     continue;
                 }
-                char *ws_message = calloc(1024, sizeof(char));
-                decode_websocket_message(buffer_ws, ws_message);
-                printf("MESSAGE : %s\n", ws_message);
-                // Broadcast
-                broadcast_message(current_fd, socket_fd, ws_message);
-                free(ws_message);
+                if (process_message(current_fd, buffer_ws) == -1)
+                {
+                    // TODO: Handle error
+                    continue;
+                };
+                free(buffer_ws);
             }
             else
             {
