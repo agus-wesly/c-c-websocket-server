@@ -216,7 +216,6 @@ int remove_socket_client(int current_fd)
 
 int handle_close_frame(int current_fd)
 {
-    printf("Close frame %i\n", current_fd);
     if (shutdown(current_fd, SHUT_WR) == -1)
     {
         perror("When shutdown");
@@ -238,7 +237,6 @@ int process_message(int current_fd, unsigned char *buffer_ws)
     // TODO: Check opcode to see the status.
     // I think we can start using enum here :r
     int opcode = (buffer_ws[0] & 0xf);
-    printf("opcode is %i\n", opcode);
     switch (opcode)
     {
     case Continuation_Frame: {
