@@ -201,6 +201,38 @@ int handle_text_frame(int current_fd, unsigned char *buffer_ws)
     return 0;
 }
 
+int remove_socket_client(int current_fd)
+{
+    for (int i = 0; i < MAX_CLIENT; ++i)
+    {
+        if (socket_clients[i] != 0 && socket_clients[i] == current_fd)
+        {
+            socket_clients[i] = 0;
+            return 0;
+        }
+    }
+    return 0;
+}
+
+int handle_close_frame(int current_fd)
+{
+    printf("Close frame %i\n", current_fd);
+    if (shutdown(current_fd, SHUT_WR) == -1)
+    {
+        perror("When shutdown");
+    };
+    char *buf = calloc(1, sizeof(char));
+    if (recv(current_fd, buf, 1, 0) == 0)
+    {
+        free(buf);
+        remove_socket_client(current_fd);
+        close(current_fd);
+        return 0;
+    };
+    free(buf);
+    return 0;
+}
+
 int process_message(int current_fd, unsigned char *buffer_ws)
 {
     // TODO: Check opcode to see the status.
@@ -217,7 +249,7 @@ int process_message(int current_fd, unsigned char *buffer_ws)
         break;
     }
     case Close_Frame: {
-        printf("Close frame\n");
+        handle_close_frame(current_fd);
         break;
     }
     default: {
