@@ -43,6 +43,7 @@ char *extract_key(char *websocket_key)
 {
     size_t offset;
     char *hexresult = (char *)malloc(41);
+    memset(hexresult, '\0', 41);
     const char *MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     websocket_key = strcat(websocket_key, MAGIC_STRING);
     SHA1((unsigned char *)websocket_key, strlen(websocket_key), (unsigned char *)hexresult);

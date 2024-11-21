@@ -137,10 +137,12 @@ int main()
                 unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
                 if (handle_received_message(current_fd, buffer_ws) == -1)
                 {
+                    free(buffer_ws);
                     continue;
                 }
                 if (process_message(current_fd, buffer_ws) == -1)
                 {
+                    free(buffer_ws);
                     // TODO: Handle error
                     continue;
                 };
