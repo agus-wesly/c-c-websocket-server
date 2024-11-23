@@ -17,17 +17,6 @@
 
 const char *HEADER = "HTTP/1.1 101 Switching Protocols\r\n";
 
-typedef struct
-{
-    int new_socket;
-} thread_info;
-
-typedef struct
-{
-    size_t curr;
-    thread_info *threads;
-} thread_args;
-
 int do_handshake(int current_fd, char *buffer)
 {
     read(current_fd, buffer, 1024);
@@ -41,14 +30,14 @@ int do_handshake(int current_fd, char *buffer)
     return 0;
 }
 
-int socket_clients[MAX_CLIENT];
+ws_frame_data *socket_clients[MAX_CLIENT];
 
-int is_socket_client(int fd)
+ws_frame_data *is_socket_client(int fd)
 {
     for (int i = 0; i < 100; ++i)
     {
-        if (socket_clients[i] == fd)
-            return 1;
+        if (socket_clients[i] != 0 && socket_clients[i]->fd == fd)
+            return socket_clients[i];
     }
     return 0;
 }
@@ -132,21 +121,23 @@ int main()
                     exit(EXIT_FAILURE);
                 }
             }
-            else if (is_socket_client(current_fd))
+            else if (is_socket_client(current_fd) != 0)
             {
-                unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
-                if (handle_received_message(current_fd, buffer_ws) == -1)
+                ws_frame_data *wfd = is_socket_client(current_fd);
+
+                // unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
+                // if (handle_received_message(current_fd, buffer_ws) == -1)
+                // {
+                //     // free(buffer_ws);
+                //     continue;
+                // }
+                if (process_message(wfd) == -1)
                 {
-                    free(buffer_ws);
-                    continue;
-                }
-                if (process_message(current_fd, buffer_ws) == -1)
-                {
-                    free(buffer_ws);
+                    free(wfd);
                     // TODO: Handle error
                     continue;
                 };
-                free(buffer_ws);
+                // free(buffer_ws);
             }
             else
             {
@@ -162,7 +153,9 @@ int main()
                 {
                     if (socket_clients[i] == 0)
                     {
-                        socket_clients[i] = current_fd;
+                        ws_frame_data *new_ws = (ws_frame_data *)calloc(1, sizeof(ws_frame_data));
+                        new_ws->fd = current_fd;
+                        socket_clients[i] = new_ws;
                         break;
                     }
                     // TODO: handle max connection
