@@ -262,9 +262,8 @@ int handle_close_frame(ws_frame_data *wfd)
     char *buf = calloc(1, sizeof(char));
     if (recv(wfd->fd, buf, 1, 0) == 0)
     {
-        free(buf);
-        remove_socket_client(wfd);
         close(wfd->fd);
+        remove_socket_client(wfd);
         return 0;
     };
     free(buf);
