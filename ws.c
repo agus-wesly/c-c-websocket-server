@@ -10,9 +10,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// 9
-// 0b00001001
-// 0b00000001
 void print_bits(unsigned char byte)
 {
     for (int i = 7; i >= 0; i--)
@@ -37,7 +34,6 @@ static inline int next_byte(ws_frame_data *wfd)
         wfd->amt_read = (size_t)n;
         wfd->cur_pos = 0;
     }
-    // unsigned char* a = &(wfd->buffer_ws[wfd->cur_pos++]);
     return (wfd->buffer_ws[wfd->cur_pos++]);
 }
 
@@ -96,12 +92,10 @@ int get_payload_size(int bit_size)
     if (bit_size == 126)
     {
         payload_size = 3;
-        // char *ws_message = calloc(1024, sizeof(char));
     }
     else if (bit_size == 127)
     {
         payload_size = 9;
-        // Read the next 64 bits
     }
     return payload_size;
 }
@@ -147,27 +141,33 @@ int decode_websocket_message(ws_frame_data *wfd, unsigned char **ws_message)
 
 int send_reply_message(int fd, char *msg)
 {
-    unsigned char buffer[MAX_PAYLOAD_SIZE] = {0};
-    buffer[0] = 0x81;
-    // TODO: set appropriate length
     long msg_len = strlen(msg);
+    unsigned char *buffer = NULL;
     int idx;
     unsigned int code;
+
     if (msg_len <= 127)
     {
         idx = 2;
+        buffer = calloc(idx + msg_len, sizeof(unsigned char));
+        buffer[0] = 0x81;
         buffer[1] = ((unsigned int)msg_len) & 0b01111111;
     }
     else if (msg_len <= 65535)
     {
         idx = 4;
+        buffer = calloc(idx + msg_len, sizeof(unsigned char));
+        buffer[0] = 0x81;
         buffer[1] = (unsigned int)(126 & 0b01111111);
         buffer[2] = (unsigned char)((msg_len >> 8) & 0xFF);
         buffer[3] = (unsigned char)((msg_len) & 0xFF);
     }
     else
     {
+        // TODO : Verify this
         idx = 10;
+        buffer = calloc(idx + msg_len, sizeof(unsigned char));
+        buffer[0] = 0x81;
         buffer[1] = (unsigned int)(127 & 0b01111111);
         int j = 2;
         for (int i = (64 - 8); i >= 0; i -= 8)
@@ -234,8 +234,7 @@ int handle_text_frame(ws_frame_data *wfd)
     unsigned char *ws_message;
     decode_websocket_message(wfd, &ws_message);
     printf("MESSAGE : %s\n", ws_message);
-    // Broadcast
-    // broadcast_message(current_fd, socket_fd, (char *)ws_message);
+    broadcast_message(wfd->fd, socket_fd, (char *)ws_message);
     free(ws_message);
     return 0;
 }
