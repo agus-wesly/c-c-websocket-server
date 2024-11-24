@@ -303,6 +303,7 @@ void handle_continuation_frame_temp(ws_frame_data *wfd)
 int process_message(ws_frame_data *wfd)
 {
     int opcode = (next_byte(wfd) & 0xf);
+    // printf("OPCODE %i\n", opcode);
     switch (opcode)
     {
     case Continuation_Frame: {

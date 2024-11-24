@@ -9,7 +9,7 @@
     <input type="text" id="input" />
     <br />
     <button id="btn">Send message</button>
-    <button id="btn-large-payload">Close connection</button>
+    <button id="btn-large-payload">Send large payload connection</button>
     <h3>Message List :</h3>
     <ul id="container"></ul>
 
@@ -35,6 +35,7 @@
         ws.addEventListener("message", (event) => {
           console.log("Message from server : ", event.data);
           const li = document.createElement("li");
+          li.style.textWrap = "wrap";
           li.textContent = event.data;
           ul.appendChild(li);
         });
