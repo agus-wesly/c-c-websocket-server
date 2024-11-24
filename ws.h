@@ -19,7 +19,7 @@ extern int socket_fd;
 
 char *get_websocket_key(char *buffer);
 char *extract_key(char *websocket_key);
-int decode_websocket_message(unsigned char *message, unsigned char **ws_message);
+int decode_websocket_message(ws_frame_data *wfd, unsigned char **ws_message);
 int send_reply_message(int fd, char *msg);
 int write_header(int new_socket, char *extracted_key, const char *HEADER);
 int handle_received_message(int current_fd, unsigned char *buffer_ws);
