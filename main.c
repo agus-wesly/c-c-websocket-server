@@ -124,26 +124,16 @@ int main()
             else if (is_socket_client(current_fd) != 0)
             {
                 ws_frame_data *wfd = is_socket_client(current_fd);
-
-                // unsigned char *buffer_ws = calloc(1024, sizeof(unsigned char));
-                // if (handle_received_message(current_fd, buffer_ws) == -1)
-                // {
-                //     // free(buffer_ws);
-                //     continue;
-                // }
                 if (process_message(wfd) == -1)
                 {
                     free(wfd);
-                    // TODO: Handle error
                     continue;
                 };
-                // free(buffer_ws);
             }
             else
             {
                 printf("Receiving data from the client with socket fd: %d\n", current_fd);
                 char *buffer = (char *)calloc(1024, sizeof(char));
-                // Process the key from client
                 if (do_handshake(current_fd, buffer) == -1)
                 {
                     free(buffer);
