@@ -264,6 +264,7 @@ int handle_close_frame(ws_frame_data *wfd)
     {
         close(wfd->fd);
         remove_socket_client(wfd);
+        free(buf);
         return 0;
     };
     free(buf);
