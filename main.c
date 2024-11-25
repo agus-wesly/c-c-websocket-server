@@ -1,5 +1,6 @@
 #include "ws.h"
 #include <asm-generic/socket.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <openssl/sha.h>
@@ -42,6 +43,23 @@ ws_frame_data *is_socket_client(int fd)
     return 0;
 }
 int socket_fd;
+
+void set_non_blocking(int sock)
+{
+    int opt;
+
+    opt = fcntl(sock, F_GETFL);
+    if (opt < 0)
+    {
+        printf("fcntl(F_GETFL) fail.");
+    }
+    opt |= O_NONBLOCK;
+    if (fcntl(sock, F_SETFL, opt) < 0)
+    {
+        printf("fcntl(F_SETFL) fail.");
+    }
+}
+
 int main()
 {
     int new_socket;
@@ -139,6 +157,7 @@ int main()
                     free(buffer);
                     continue;
                 };
+                set_non_blocking(current_fd);
                 for (int i = 0; i < MAX_CLIENT; ++i)
                 {
                     if (socket_clients[i] == 0)
