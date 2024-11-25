@@ -25,7 +25,7 @@ static inline int next_byte(ws_frame_data *wfd)
 
     if (wfd->cur_pos == 0 || wfd->cur_pos == wfd->amt_read)
     {
-        long n = recv(wfd->fd, wfd->buffer_ws, sizeof(wfd->buffer_ws), 0);
+        long n = read(wfd->fd, wfd->buffer_ws, sizeof(wfd->buffer_ws));
         if (n == -1)
         {
             perror("While reading");
@@ -219,7 +219,7 @@ enum Opcode
 
 int handle_received_message(int current_fd, unsigned char *buffer_ws)
 {
-    long resp_ws = recv(current_fd, buffer_ws, 1024, 0);
+    long resp_ws = read(current_fd, buffer_ws, 1024);
     if (resp_ws < 0)
     {
         perror("Error in reading");
@@ -260,7 +260,7 @@ int handle_close_frame(ws_frame_data *wfd)
         perror("When shutdown");
     };
     char *buf = calloc(1, sizeof(char));
-    if (recv(wfd->fd, buf, 1, 0) == 0)
+    if (read(wfd->fd, buf, 1) == 0)
     {
         close(wfd->fd);
         remove_socket_client(wfd);
